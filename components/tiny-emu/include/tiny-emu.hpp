@@ -14,7 +14,7 @@
 #include <class/msc/msc.h>
 #include <tusb_msc_storage.h>
 
-#include "esp-box.hpp"
+#include "esp-waveshare.hpp"
 #include "event_manager.hpp"
 
 #include "aw9523.hpp"
@@ -43,7 +43,7 @@ public:
 
   // Define the BSP class for easier access, and potential ability to change the
   // BSP if we want to support other targets.
-  using Bsp = espp::EspBox;
+  using Bsp = espp::EspWaveshare;
 
   // Wrap some of the EspBox defines / methods for easier access and to remove
   // dependency on EspBox from other components

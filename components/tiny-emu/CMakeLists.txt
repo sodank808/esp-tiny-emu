@@ -29,6 +29,6 @@ idf_component_register(
   "serialization"
   "statistics"
   "max1704x"
-  "esp-box"
+  "esp-waveshare"
   "pool_allocator"
   )
