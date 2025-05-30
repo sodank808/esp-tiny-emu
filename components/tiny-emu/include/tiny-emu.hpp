@@ -108,12 +108,11 @@ public:
   /// \note The external I2C bus is used for the gamepad functionality
   espp::I2c &external_i2c();
 
-  /// Initialize the EspBox hardware
+  /// Initialize the hardware bsp
   /// \return True if the initialization was successful, false otherwise
   /// \note This initializes the touch, display, and sound subsystems which are
-  ///       internal to the EspBox
-  /// \see EspBox
-  bool initialize_box();
+  ///       internal to the bsp
+  bool initialize_bsp();
 
   /////////////////////////////////////////////////////////////////////////////
   // uSD Card
@@ -161,16 +160,6 @@ public:
   void push_frame(const void* frame);
   VideoSetting video_setting() const;
   void video_setting(const VideoSetting setting);
-
-  /////////////////////////////////////////////////////////////////////////////
-  // Haptic Motor (DRV2605)
-  /////////////////////////////////////////////////////////////////////////////
-
-  bool initialize_haptics();
-  std::shared_ptr<espp::Drv2605> haptics() const;
-  void play_haptic_effect();
-  void play_haptic_effect(int effect);
-  void set_haptic_effect(int effect);
 
   /////////////////////////////////////////////////////////////////////////////
   // USB
@@ -360,9 +349,6 @@ protected:
 
   const uint16_t* palette_{nullptr};
   size_t palette_size_{256};
-
-  // haptics
-  std::shared_ptr<espp::Drv2605> haptic_motor_{nullptr};
 
   // usb
   std::atomic<bool> usb_enabled_{false};

@@ -28,8 +28,8 @@ extern "C" void app_main(void) {
   logger.info("Tiny Emu version: {}", emu.version());
 
   // initialize
-  if (!emu.initialize_box()) {
-    logger.error("Failed to initialize box!");
+  if (!emu.initialize_bsp()) {
+    logger.error("Failed to initialize bsp!");
     return;
   }
 
@@ -58,10 +58,7 @@ extern "C" void app_main(void) {
     return;
   }
 
-  if (!emu.initialize_haptics()) {
-    logger.warn("Failed to initialize haptics!");
-    logger.warn("This may happen if the gamepad is not connected.");
-  }
+  // TODO: Intialize BLE
 
   logger.info("initializing gui...");
 
@@ -69,8 +66,8 @@ extern "C" void app_main(void) {
 
   // initialize the gui
   Gui gui({
-      .play_haptic = [&emu]() { emu.play_haptic_effect(); },
-      .set_waveform = [&emu](uint8_t waveform) { emu.set_haptic_effect(waveform); },
+      .play_haptic = [&emu]() { /* no haptics */ },
+      .set_waveform = [&emu](uint8_t waveform) { /* no haptics */ },
       .log_level = espp::Logger::Verbosity::WARN
     });
 
@@ -88,8 +85,7 @@ extern "C" void app_main(void) {
     }
 
     // have broken out of the loop, let the user know we're processing...
-    emu.set_haptic_effect(gui.get_haptic_waveform());
-    emu.play_haptic_effect();
+    // TODO: Play audio effect in the absence of haptics?
 
     gui.pause();
 

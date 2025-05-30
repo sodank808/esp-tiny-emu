@@ -36,27 +36,27 @@ espp::I2c &TinyEmu::external_i2c() {
   return external_i2c_;
 }
 
-bool TinyEmu::initialize_box() {
+bool TinyEmu::initialize_bsp() {
   logger_.info("Initializing underlying BSP");
-  auto &box = Bsp::get();
+  auto &bsp = Bsp::get();
   // initialize the sound
-  if (!box.initialize_sound()) {
+  if (!bsp.initialize_sound()) {
     logger_.error("Failed to initialize sound!");
     return false;
   }
   // initialize the LCD
-  if (!box.initialize_lcd()) {
+  if (!bsp.initialize_lcd()) {
     logger_.error("Failed to initialize LCD!");
     return false;
   }
   static constexpr size_t pixel_buffer_size = Bsp::lcd_width() * num_rows_in_framebuffer;
   // initialize the LVGL display for the esp-box
-  if (!box.initialize_display(pixel_buffer_size)) {
+  if (!bsp.initialize_display(pixel_buffer_size)) {
     logger_.error("Failed to initialize display!");
     return false;
   }
   // initialize the touchpad
-  if (!box.initialize_touch()) {
+  if (!bsp.initialize_touch()) {
     logger_.error("Failed to initialize touchpad!");
     return false;
   }
@@ -515,67 +515,6 @@ void TinyEmu::video_setting(const VideoSetting setting) {
 }
 
 /////////////////////////////////////////////////////////////////////////////
-// Haptic Motor
-/////////////////////////////////////////////////////////////////////////////
-
-bool TinyEmu::initialize_haptics() {
-  if (haptic_motor_) {
-    logger_.error("Haptics already initialized!");
-    return false;
-  }
-  logger_.info("Initializing haptics");
-  haptic_motor_ = std::make_shared<espp::Drv2605>(espp::Drv2605::Config{
-      .device_address = espp::Drv2605::DEFAULT_ADDRESS,
-      .write = std::bind(&espp::I2c::write, &external_i2c_, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3),
-      .read_register = std::bind(&espp::I2c::read_at_register, &external_i2c_, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4),
-      .motor_type = espp::Drv2605::MotorType::LRA
-    });
-  // we're using an LRA motor, so select th LRA library.
-  std::error_code ec;
-  haptic_motor_->select_library(espp::Drv2605::Library::LRA, ec);
-  if (ec) {
-    logger_.error("Error selecting LRA library: {}", ec.message());
-    return false;
-  }
-  return true;
-}
-
-std::shared_ptr<espp::Drv2605> TinyEmu::haptics() const {
-  return haptic_motor_;
-}
-
-void TinyEmu::play_haptic_effect() {
-  if (haptic_motor_ == nullptr) {
-    logger_.error("Haptic motor not initialized!");
-    return;
-  }
-    std::error_code ec;
-    haptic_motor_->start(ec);
-    if (ec) {
-      logger_.error("Error starting haptic motor: {}", ec.message());
-    }
-}
-
-void TinyEmu::play_haptic_effect(int effect) {
-  if (haptic_motor_ == nullptr) {
-    logger_.error("Haptic motor not initialized!");
-    return;
-  }
-  set_haptic_effect(effect);
-  play_haptic_effect();
-}
-
-void TinyEmu::set_haptic_effect(int effect) {
-  if (haptic_motor_ == nullptr) {
-    logger_.error("Haptic motor not initialized!");
-    return;
-  }
-  std::error_code ec;
-  haptic_motor_->set_waveform(0, (espp::Drv2605::Waveform)(effect), ec);
-  haptic_motor_->set_waveform(1, espp::Drv2605::Waveform::END, ec);
-}
-
-/////////////////////////////////////////////////////////////////////////////
 // USB
 /////////////////////////////////////////////////////////////////////////////
 
@@ -732,9 +671,9 @@ bool TinyEmu::video_task_callback(std::mutex &m, std::condition_variable& cv, bo
     return false;
   }
   static constexpr int num_lines_to_write = num_rows_in_framebuffer;
-  static auto &box = Bsp::get();
-  static const uint16_t *vram0 = (uint16_t*)box.vram0();
-  static const uint16_t *vram1 = (uint16_t*)box.vram1();
+  static auto &bsp = Bsp::get();
+  static const uint16_t *vram0 = (uint16_t*)bsp.vram0();
+  static const uint16_t *vram1 = (uint16_t*)bsp.vram1();
   static uint16_t vram_index = 0; // has to be static so that it persists between calls
   const int _x_offset = x_offset();
   const int _y_offset = y_offset();
@@ -748,7 +687,7 @@ bool TinyEmu::video_task_callback(std::mutex &m, std::condition_variable& cv, bo
       int num_lines = std::min<int>(num_lines_to_write, lcd_height()-y);
       // memset the buffer to 0
       memset(_buf, 0, lcd_width() * num_lines * sizeof(Pixel));
-      box.write_lcd_frame(0, y + _y_offset, lcd_width(), num_lines, (uint8_t*)&_buf[0]);
+      bsp.write_lcd_frame(0, y + _y_offset, lcd_width(), num_lines, (uint8_t*)&_buf[0]);
     }
 
     // now return
@@ -771,7 +710,7 @@ bool TinyEmu::video_task_callback(std::mutex &m, std::condition_variable& cv, bo
             _buf[dst_index + 1] = _palette[_frame[src_index + 1] % palette_size_];
           }
         }
-        box.write_lcd_frame(_x_offset, y + _y_offset, display_width_, num_lines, (uint8_t*)&_buf[0]);
+        bsp.write_lcd_frame(_x_offset, y + _y_offset, display_width_, num_lines, (uint8_t*)&_buf[0]);
       }
     } else {
       // no palette
@@ -790,7 +729,7 @@ bool TinyEmu::video_task_callback(std::mutex &m, std::condition_variable& cv, bo
             _buf[dst_index + 1] = _frame[src_index + 1];
           }
         }
-        box.write_lcd_frame(_x_offset, y + _y_offset, display_width_, num_lines, (uint8_t*)&_buf[0]);
+        bsp.write_lcd_frame(_x_offset, y + _y_offset, display_width_, num_lines, (uint8_t*)&_buf[0]);
       }
     }
   } else {
@@ -825,7 +764,7 @@ bool TinyEmu::video_task_callback(std::mutex &m, std::condition_variable& cv, bo
             _buf[dst_index + 1] = _palette[_frame[src_index + 1] % palette_size_];
           }
         }
-        box.write_lcd_frame(0 + _x_offset, y, max_x, i, (uint8_t*)&_buf[0]);
+        bsp.write_lcd_frame(0 + _x_offset, y, max_x, i, (uint8_t*)&_buf[0]);
       }
     } else {
       // no palette
@@ -851,7 +790,7 @@ bool TinyEmu::video_task_callback(std::mutex &m, std::condition_variable& cv, bo
             _buf[dst_index + 1] = _frame[src_index + 1];
           }
         }
-        box.write_lcd_frame(0 + _x_offset, y, max_x, i, (uint8_t*)&_buf[0]);
+        bsp.write_lcd_frame(0 + _x_offset, y, max_x, i, (uint8_t*)&_buf[0]);
       }
     }
   }

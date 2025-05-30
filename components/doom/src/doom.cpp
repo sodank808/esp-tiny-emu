@@ -123,20 +123,20 @@ extern "C" {
     };
 
     void R_PlayerFire(player_t *player) {
-        static auto& box = TinyEmu::get();
+        static auto& bsp = TinyEmu::get();
         int weapon_fired = player->readyweapon;
         if (weapon_fired >= 0 && weapon_fired < sizeof(WeaponHapticLookup) / sizeof(WeaponHapticLookup[0])) {
             int haptic_effect_index = WeaponHapticLookup[weapon_fired];
-            box.play_haptic_effect(haptic_effect_index);
+            //bsp.play_haptic_effect(haptic_effect_index);
         } else {
             // Handle invalid weapon index (e.g., log an error or use a default effect)
             // For now, we skip playing the haptic effect.
-            // Example: box.play_haptic_effect(DEFAULT_HAPTIC_EFFECT);
+            // Example: bsp.play_haptic_effect(DEFAULT_HAPTIC_EFFECT);
         }
     }
 
     void R_PlayerHurt(player_t *player, int damage, int saved) {
-        static auto& box = TinyEmu::get();
+        static auto& bsp = TinyEmu::get();
         int haptic_effect_index = 0;
         if (damage > 5) {
             // 70 - transition ramp down long smooth 1 - 100 to 0%
@@ -147,49 +147,49 @@ extern "C" {
             // 64 - transition hum 100%
             haptic_effect_index = saved > 0 ? 78 : 64;
         }
-        box.play_haptic_effect(haptic_effect_index);
+        //bsp.play_haptic_effect(haptic_effect_index);
     }
 
     void R_PlayerInteract(player_t *player, int special) {
-        static auto& box = TinyEmu::get();
+        static auto& bsp = TinyEmu::get();
         // play 4 (sharp click - 100%)
-        box.play_haptic_effect(4);
+        //bsp.play_haptic_effect(4);
     }
 
     void R_PlayerPickupWeapon(player_t *player, int weapon) {
-        static auto& box = TinyEmu::get();
+        static auto& bsp = TinyEmu::get();
         // play 29 (short double click strong 3 - 60%)
-        box.play_haptic_effect(29);
+        //bsp.play_haptic_effect(29);
     }
 
     void R_PlayerPickupAmmo(player_t *player, ammotype_t ammo, int num) {
-        static auto& box = TinyEmu::get();
+        static auto& bsp = TinyEmu::get();
         // play 34 (short double sharp tick 1 - 100%)
-        box.play_haptic_effect(34);
+        //bsp.play_haptic_effect(34);
     }
 
     void R_PlayerPickupHealth(player_t *player, int health) {
-        static auto& box = TinyEmu::get();
+        static auto& bsp = TinyEmu::get();
         // play 18 (strong click 2 - 80%)
-        box.play_haptic_effect(18);
+        //bsp.play_haptic_effect(18);
     }
 
     void R_PlayerPickupArmor(player_t *player, int armor) {
-        static auto& box = TinyEmu::get();
+        static auto& bsp = TinyEmu::get();
         // play 19 (strong click 3 - 60%)
-        box.play_haptic_effect(19);
+        //bsp.play_haptic_effect(19);
     }
 
     void R_PlayerPickupCard(player_t *player, card_t card) {
-        static auto& box = TinyEmu::get();
+        static auto& bsp = TinyEmu::get();
         // play 5 (sharp click - 60%)
-        box.play_haptic_effect(5);
+        //bsp.play_haptic_effect(5);
     }
 
     void R_PlayerPickupPowerUp(player_t *player, int powerup) {
-        static auto& box = TinyEmu::get();
+        static auto& bsp = TinyEmu::get();
         // play 12 (triple click - 100%)
-        box.play_haptic_effect(12);
+        //bsp.play_haptic_effect(12);
     }
 
     void I_StartFrame(void) {
@@ -199,8 +199,8 @@ extern "C" {
     }
 
     void I_FinishUpdate(void) {
-        static auto& box = TinyEmu::get();
-        box.push_frame(framebuffer);
+        static auto& bsp = TinyEmu::get();
+        bsp.push_frame(framebuffer);
     }
 
     bool I_StartDisplay(void) {
@@ -211,10 +211,10 @@ extern "C" {
     }
 
     void I_SetPalette(int pal) {
-        static auto& box = TinyEmu::get();
+        static auto& bsp = TinyEmu::get();
         uint16_t *palette = (uint16_t*)V_BuildPalette(pal, 16);
         if (palette == NULL) {
-            box.palette(NULL);
+            bsp.palette(NULL);
             return;
         }
         // copy palette to doom_palette
@@ -224,7 +224,7 @@ extern "C" {
         // release the allocated memory
         Z_Free(palette);
         // set the palette
-        box.palette(doom_palette);
+        bsp.palette(doom_palette);
     }
 
     void I_InitGraphics(void) {
@@ -386,8 +386,8 @@ extern "C" {
             memset(mixbuffer, 0, AUDIO_BUFFER_LENGTH * sizeof(int16_t));
         }
 
-        static auto& box = TinyEmu::get();
-        box.play_audio((const uint8_t*)mixbuffer, AUDIO_BUFFER_LENGTH * sizeof(int16_t));
+        static auto& bsp = TinyEmu::get();
+        bsp.play_audio((const uint8_t*)mixbuffer, AUDIO_BUFFER_LENGTH * sizeof(int16_t));
         std::this_thread::sleep_for(std::chrono::microseconds(1'000'000 / TICRATE));
         return false;
     }
@@ -402,8 +402,8 @@ extern "C" {
         music_player->init(snd_samplerate);
         music_player->setvolume(snd_MusicVolume);
 
-        auto& box = TinyEmu::get();
-        box.audio_sample_rate(snd_samplerate);
+        auto& bsp = TinyEmu::get();
+        bsp.audio_sample_rate(snd_samplerate);
 
         // ensure any previous task is stopped and freed
         audio_task.reset();
@@ -472,8 +472,8 @@ extern "C" {
     void I_StartTic(void) {
         static int32_t prev_joystick = 0x0000;
 
-        static auto& box = TinyEmu::get();
-        auto state = box.gamepad_state();
+        static auto& bsp = TinyEmu::get();
+        auto state = bsp.gamepad_state();
         auto joystick = state.buttons;
 
         // update unlock based on x button
