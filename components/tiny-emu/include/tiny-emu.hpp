@@ -328,13 +328,6 @@ protected:
   std::shared_ptr<espp::KeypadInput> keypad_;
   std::shared_ptr<espp::HighResolutionTimer> input_timer_;
 
-  // battery
-  std::atomic<bool> battery_comms_good_{true};
-  std::shared_ptr<espp::Max1704x> battery_{nullptr};
-  std::shared_ptr<espp::OneshotAdc> adc_{nullptr};
-  std::shared_ptr<espp::HighResolutionTimer> battery_task_;
-  std::vector<espp::AdcConfig> channels;
-
   // video
   std::atomic<VideoSetting> video_setting_{VideoSetting::FIT};
   std::unique_ptr<espp::Task> video_task_{nullptr};
