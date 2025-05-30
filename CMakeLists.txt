@@ -88,6 +88,6 @@ set(
   "List of components to include"
   )
 
-project(esp-box-emu)
+project(esp-tiny-emu)
 
 set(CMAKE_CXX_STANDARD 20)

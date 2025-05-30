@@ -1,0 +1,52 @@
+# Build directories
+build/
+sdkconfig
+sdkconfig.old
+
+# ESP-IDF specific
+managed_components/
+dependencies.lock
+
+# IDE and editor files
+.vscode/
+.idea/
+*.swp
+*~
+
+# Compiled files
+*.o
+*.obj
+*.elf
+*.bin
+*.hex
+*.map
+*.lst
+
+# Debug files
+*.dSYM/
+*.su
+*.idb
+*.pdb
+
+# Unused components based on CMakeLists.txt
+# Note: These are components that are not enabled in the current configuration
+components/espp/components/snes/
+components/jpegdec/
+
+# Dependencies and package management
+deps/
+node_modules/
+
+# Logs and databases
+*.log
+*.sqlite
+*.db
+
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db 
