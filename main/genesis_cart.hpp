@@ -97,7 +97,7 @@ protected:
 #if defined(ENABLE_GENESIS)
     auto height = GENESIS_HEIGHT;
     auto width = GENESIS_WIDTH;
-    BoxEmu::get().display_size(width, height);
+    TinyEmu::get().display_size(width, height);
 #endif
   }
 
@@ -120,14 +120,14 @@ protected:
 #if defined(ENABLE_GENESIS)
     logger_.info("genesis::video: fit");
     // the genesis is already 320 px wide, don't do anything
-    BoxEmu::get().display_size(GENESIS_WIDTH, GENESIS_HEIGHT);
+    TinyEmu::get().display_size(GENESIS_WIDTH, GENESIS_HEIGHT);
 #endif
   }
 
   virtual void set_fill_video_setting() override {
 #if defined(ENABLE_GENESIS)
     logger_.info("genesis::video: fill");
-    BoxEmu::get().display_size(SCREEN_WIDTH, SCREEN_HEIGHT);
+    TinyEmu::get().display_size(SCREEN_WIDTH, SCREEN_HEIGHT);
 #endif
   }
 

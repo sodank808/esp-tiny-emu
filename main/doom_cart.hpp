@@ -87,7 +87,7 @@ protected:
   virtual void set_original_video_setting() override {
 #if defined(ENABLE_DOOM)
     logger_.info("doom::video: original");
-    BoxEmu::get().display_size(DOOM_WIDTH, DOOM_HEIGHT);
+    TinyEmu::get().display_size(DOOM_WIDTH, DOOM_HEIGHT);
 #endif
   }
 
@@ -109,14 +109,14 @@ protected:
     logger_.info("gbc::video: fit");
     float x_scale = static_cast<float>(SCREEN_HEIGHT) / static_cast<float>(DOOM_HEIGHT);
     int new_width = static_cast<int>(static_cast<float>(DOOM_WIDTH) * x_scale);
-    BoxEmu::get().display_size(new_width, SCREEN_HEIGHT);
+    TinyEmu::get().display_size(new_width, SCREEN_HEIGHT);
 #endif
   }
 
   virtual void set_fill_video_setting() override {
 #if defined(ENABLE_DOOM)
     logger_.info("doom::video: fill");
-    BoxEmu::get().display_size(SCREEN_WIDTH, SCREEN_HEIGHT);
+    TinyEmu::get().display_size(SCREEN_WIDTH, SCREEN_HEIGHT);
 #endif
   }
 

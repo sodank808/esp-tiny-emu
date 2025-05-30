@@ -4,7 +4,7 @@
 #include <string>
 #include <vector>
 
-#include "box-emu.hpp"
+#include "tiny-emu.hpp"
 #include "format.hpp"
 #include "string_utils.hpp"
 

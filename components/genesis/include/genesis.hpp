@@ -9,7 +9,7 @@
 
 #include "genesis_shared_memory.hpp"
 #include "z80_shared_memory.hpp"
-#include "box-emu.hpp"
+#include "tiny-emu.hpp"
 
 #ifdef __cplusplus
 extern "C" {

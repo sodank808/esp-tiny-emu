@@ -38,7 +38,7 @@
 #include "make_color.h"
 #include "pool_allocator.h"
 
-class BoxEmu : public espp::BaseComponent {
+class TinyEmu : public espp::BaseComponent {
 public:
 
   // Define the BSP class for easier access, and potential ability to change the
@@ -72,29 +72,29 @@ public:
   void play_audio(const uint8_t *data, size_t size) { Bsp::get().play_audio(data, size); }
   void play_audio(const std::vector<uint8_t> &data) { Bsp::get().play_audio(data); }
 
-  /// The Version of the BoxEmu
+  /// The Version of the TinyEmu
   enum class Version {
     UNKNOWN, ///< unknown box
     V0,      ///< first version of the box
     V1,      ///< second version of the box
   };
 
-  /// @brief Access the singleton instance of the BoxEmu class
-  /// @return Reference to the singleton instance of the BoxEmu class
-  static BoxEmu &get() {
-    static BoxEmu instance;
+  /// @brief Access the singleton instance of the TinyEmu class
+  /// @return Reference to the singleton instance of the TinyEmu class
+  static TinyEmu &get() {
+    static TinyEmu instance;
     return instance;
   }
 
-  BoxEmu(const BoxEmu &) = delete;
-  BoxEmu &operator=(const BoxEmu &) = delete;
-  BoxEmu(BoxEmu &&) = delete;
-  BoxEmu &operator=(BoxEmu &&) = delete;
+  TinyEmu(const TinyEmu &) = delete;
+  TinyEmu &operator=(const TinyEmu &) = delete;
+  TinyEmu(TinyEmu &&) = delete;
+  TinyEmu &operator=(TinyEmu &&) = delete;
 
   static constexpr char mount_point[] = "/sdcard";
 
-  /// Get the version of the BoxEmu that was detected
-  /// \return The version of the BoxEmu that was detected
+  /// Get the version of the TinyEmu that was detected
+  /// \return The version of the TinyEmu that was detected
   /// \see Version
   Version version() const;
 
@@ -181,7 +181,7 @@ public:
   bool is_usb_enabled() const;
 
 protected:
-  BoxEmu();
+  TinyEmu();
   void detect();
 
   bool has_palette() const;
@@ -369,20 +369,20 @@ protected:
   usb_phy_handle_t jtag_phy_;
 };
 
-// for libfmt printing of the BoxEmu::Version enum
+// for libfmt printing of the TinyEmu::Version enum
 template <>
-struct fmt::formatter<BoxEmu::Version> : fmt::formatter<std::string> {
+struct fmt::formatter<TinyEmu::Version> : fmt::formatter<std::string> {
   template <typename FormatContext>
-  auto format(BoxEmu::Version v, FormatContext &ctx) const {
+  auto format(TinyEmu::Version v, FormatContext &ctx) const {
     std::string_view name;
     switch (v) {
-      case BoxEmu::Version::UNKNOWN:
+      case TinyEmu::Version::UNKNOWN:
         name = "UNKNOWN";
         break;
-      case BoxEmu::Version::V0:
+      case TinyEmu::Version::V0:
         name = "V0";
         break;
-      case BoxEmu::Version::V1:
+      case TinyEmu::Version::V1:
         name = "V1";
         break;
     }

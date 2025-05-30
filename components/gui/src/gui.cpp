@@ -7,7 +7,7 @@ extern "C" {
 }
 
 void Gui::set_mute(bool muted) {
-  BoxEmu::get().mute(muted);
+  TinyEmu::get().mute(muted);
   if (muted) {
     lv_obj_add_state(ui_mutebutton, LV_STATE_CHECKED);
   } else {
@@ -18,17 +18,17 @@ void Gui::set_mute(bool muted) {
 void Gui::set_audio_level(int new_audio_level) {
   new_audio_level = std::clamp(new_audio_level, 0, 100);
   lv_bar_set_value(ui_volumebar, new_audio_level, LV_ANIM_ON);
-  BoxEmu::get().volume(new_audio_level);
+  TinyEmu::get().volume(new_audio_level);
 }
 
 void Gui::set_brightness(int new_brightness) {
   new_brightness = std::clamp(new_brightness, 10, 100);
   lv_bar_set_value(ui_brightnessbar, new_brightness, LV_ANIM_ON);
-  BoxEmu::get().brightness((float)new_brightness);
+  TinyEmu::get().brightness((float)new_brightness);
 }
 
 void Gui::set_video_setting(VideoSetting setting) {
-  BoxEmu::get().video_setting(setting);
+  TinyEmu::get().video_setting(setting);
   lv_dropdown_set_selected(ui_videosettingdropdown, (int)setting);
 }
 
@@ -48,7 +48,7 @@ void Gui::clear_rom_list() {
 void Gui::update_rom_list() {
   // only do this if the metadata has changed since the last time we updated. We
   // do this by checking the last modified time of the metadata file.
-  std::filesystem::path metadata_path(std::string(BoxEmu::mount_point) + "/" + metadata_filename_);
+  std::filesystem::path metadata_path(std::string(TinyEmu::mount_point) + "/" + metadata_filename_);
   std::error_code ec;
   auto metadata_last_modified = std::filesystem::last_write_time(metadata_path, ec);
   if (ec) {
@@ -135,7 +135,7 @@ void Gui::init_ui() {
   settings_screen_group_ = lv_group_create();
 
   // get the KEYPAD indev
-  auto keypad = BoxEmu::get().keypad();
+  auto keypad = TinyEmu::get().keypad();
   if (keypad) {
     auto input = keypad->get_input_device();
     if (input)
@@ -147,7 +147,7 @@ void Gui::init_ui() {
   // set the animation speed for the roller
   lv_obj_set_style_anim_time(ui_roms, 30, LV_PART_MAIN);
 
-  lv_bar_set_value(ui_volumebar, BoxEmu::get().volume(), LV_ANIM_OFF);
+  lv_bar_set_value(ui_volumebar, TinyEmu::get().volume(), LV_ANIM_OFF);
 
   // rom screen navigation
   lv_obj_add_event_cb(ui_settingsbutton, &Gui::event_callback, LV_EVENT_PRESSED, static_cast<void*>(this));
@@ -283,12 +283,12 @@ void Gui::on_pressed(lv_event_t *e) {
   // volume controls
   bool is_volume_up_button = (target == ui_volumeupbutton);
   if (is_volume_up_button) {
-    set_audio_level(BoxEmu::get().volume() + 10);
+    set_audio_level(TinyEmu::get().volume() + 10);
     return;
   }
   bool is_volume_down_button = (target == ui_volumedownbutton);
   if (is_volume_down_button) {
-    set_audio_level(BoxEmu::get().volume() - 10);
+    set_audio_level(TinyEmu::get().volume() - 10);
     return;
   }
   bool is_mute_button = (target == ui_mutebutton);
@@ -299,13 +299,13 @@ void Gui::on_pressed(lv_event_t *e) {
   // brightness controlsn
   bool is_brightness_up_button = (target == ui_brightnessupbutton);
   if (is_brightness_up_button) {
-    int brightness = BoxEmu::get().brightness();
+    int brightness = TinyEmu::get().brightness();
     set_brightness(brightness + 10);
     return;
   }
   bool is_brightness_down_button = (target == ui_brightnessdownbutton);
   if (is_brightness_down_button) {
-    int brightness = BoxEmu::get().brightness();
+    int brightness = TinyEmu::get().brightness();
     set_brightness(brightness - 10);
     return;
   }
@@ -346,7 +346,7 @@ void Gui::on_pressed(lv_event_t *e) {
 
 void Gui::on_volume(const std::vector<uint8_t>& data) {
   // the volume was changed, update our display of the volume
-  lv_bar_set_value(ui_volumebar, BoxEmu::get().volume(), LV_ANIM_ON);
+  lv_bar_set_value(ui_volumebar, TinyEmu::get().volume(), LV_ANIM_ON);
 }
 
 void Gui::on_battery(const std::vector<uint8_t>& data) {
@@ -388,7 +388,7 @@ void Gui::on_battery(const std::vector<uint8_t>& data) {
 
 void Gui::toggle_usb() {
   fmt::print("Toggling USB\n");
-  auto &emu = BoxEmu::get();
+  auto &emu = TinyEmu::get();
   // toggle the usb
   if (emu.is_usb_enabled()) {
     emu.deinitialize_usb();
@@ -417,7 +417,7 @@ void Gui::focus_rommenu() {
   // focus the rom screen group
   logger_.debug("Focusing rom screen group");
   lv_group_focus_freeze(rom_screen_group_, false);
-  auto keypad = BoxEmu::get().keypad();
+  auto keypad = TinyEmu::get().keypad();
   if (keypad) {
     auto input = keypad->get_input_device();
     if (input)
@@ -431,7 +431,7 @@ void Gui::focus_settings() {
   logger_.debug("Focusing settings screen group");
   lv_group_focus_freeze(settings_screen_group_, false);
   // NOTE: we don't set editing here since we use it to manage the dropdown
-  auto keypad = BoxEmu::get().keypad();
+  auto keypad = TinyEmu::get().keypad();
   if (keypad) {
     auto input = keypad->get_input_device();
     if (input)

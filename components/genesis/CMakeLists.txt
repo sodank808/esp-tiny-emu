@@ -20,7 +20,7 @@ idf_component_register(
         "gwenesis/src/savestate"
     REQUIRES
         shared_memory
-        box-emu
+        tiny-emu
 )
 # target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-char-subscripts -Wno-attributes -Wno-implicit-fallthrough -Wno-unused-function -Wno-unused-variable -Wno-discarded-qualifiers)
 target_compile_options(${COMPONENT_LIB} PRIVATE -Wno-unused-const-variable -Wno-unused-value -Ofast)

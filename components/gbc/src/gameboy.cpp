@@ -6,7 +6,7 @@
 
 #include <memory>
 
-#include "box-emu.hpp"
+#include "tiny-emu.hpp"
 #include "statistics.hpp"
 
 static const size_t GAMEBOY_SCREEN_WIDTH = 160;
@@ -60,7 +60,7 @@ void run_to_vblank() {
 
   /* VBLANK BEGIN */
   if ((frame % 2) == 0) {
-    BoxEmu::get().push_frame(framebuffer);
+    TinyEmu::get().push_frame(framebuffer);
 
     // swap buffers
     currentBuffer = currentBuffer ? 0 : 1;
@@ -75,7 +75,7 @@ void run_to_vblank() {
   if (pcm.pos > 100) {
     auto audio_sample_count = pcm.pos;
     auto audio_buffer = (uint8_t*)pcm.buf;
-    BoxEmu::get().play_audio(audio_buffer, audio_sample_count * sizeof(int16_t));
+    TinyEmu::get().play_audio(audio_buffer, audio_sample_count * sizeof(int16_t));
     pcm.pos = 0;
   }
 
@@ -120,11 +120,11 @@ void init_gameboy(const std::string& rom_filename, uint8_t *romdata, size_t rom_
   pcm.len = GBC_AUDIO_BUFFER_SIZE / sizeof(int16_t);
 
   // set native size
-  BoxEmu::get().native_size(GAMEBOY_SCREEN_WIDTH, GAMEBOY_SCREEN_HEIGHT);
-  BoxEmu::get().palette(nullptr);
+  TinyEmu::get().native_size(GAMEBOY_SCREEN_WIDTH, GAMEBOY_SCREEN_HEIGHT);
+  TinyEmu::get().palette(nullptr);
 
-  displayBuffer[0] = (uint16_t*)BoxEmu::get().frame_buffer0();
-  displayBuffer[1] = (uint16_t*)BoxEmu::get().frame_buffer1();
+  displayBuffer[0] = (uint16_t*)TinyEmu::get().frame_buffer0();
+  displayBuffer[1] = (uint16_t*)TinyEmu::get().frame_buffer1();
 
   memset(&fb, 0, sizeof(fb));
   fb.w = GAMEBOY_SCREEN_WIDTH;
@@ -137,7 +137,7 @@ void init_gameboy(const std::string& rom_filename, uint8_t *romdata, size_t rom_
   fb.dirty = 0;
   framebuffer = displayBuffer[0];
 
-  BoxEmu::get().audio_sample_rate(GAMEBOY_AUDIO_SAMPLE_RATE);
+  TinyEmu::get().audio_sample_rate(GAMEBOY_AUDIO_SAMPLE_RATE);
   // save the audio buffer
   auto buf = pcm.buf;
   auto len = pcm.len;
@@ -162,7 +162,7 @@ void init_gameboy(const std::string& rom_filename, uint8_t *romdata, size_t rom_
 void run_gameboy_rom() {
   auto start = esp_timer_get_time();
   // GET INPUT
-  auto state = BoxEmu::get().gamepad_state();
+  auto state = TinyEmu::get().gamepad_state();
   pad_set(PAD_UP, state.up);
   pad_set(PAD_DOWN, state.down);
   pad_set(PAD_LEFT, state.left);
@@ -219,5 +219,5 @@ void deinit_gameboy() {
 
   // now unload everything
   loader_unload();
-  BoxEmu::get().audio_sample_rate(48000);
+  TinyEmu::get().audio_sample_rate(48000);
 }

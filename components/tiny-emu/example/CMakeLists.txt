@@ -12,7 +12,7 @@ set(EXTRA_COMPONENT_DIRS
 
 set(
   COMPONENTS
-  "main esptool_py box-emu"
+  "main esptool_py tiny-emu"
   CACHE STRING
   "List of components to include"
   )

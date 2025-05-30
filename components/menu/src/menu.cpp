@@ -15,7 +15,7 @@ void Menu::init_ui() {
   lv_group_set_default(group_);
 
   // get the KEYPAD indev
-  auto keypad = BoxEmu::get().keypad();
+  auto keypad = TinyEmu::get().keypad();
   if (keypad) {
     auto input = keypad->get_input_device();
     if (input)
@@ -154,7 +154,7 @@ void Menu::update_slot_image() {
     logger_.info("Slot image is {}x{}", width, height);
     int state_image_data_size = size - header_size;
     // state_image_data_.resize(state_image_data_size);
-    state_image_data_ = std::span<uint8_t>(BoxEmu::get().frame_buffer0(), state_image_data_size);
+    state_image_data_ = std::span<uint8_t>(TinyEmu::get().frame_buffer0(), state_image_data_size);
     file.read((char*)state_image_data_.data(), state_image_data_size);
     file.close();
     memset(&state_image_, 0, sizeof(state_image_));
@@ -194,7 +194,7 @@ void Menu::update_pause_image() {
   logger_.info("Paused image is {}x{}", width, height);
   int paused_image_data_size = size - header_size;
   // paused_image_data_.resize(paused_image_data_size);
-  paused_image_data_ = std::span<uint8_t>(BoxEmu::get().frame_buffer1(), paused_image_data_size);
+  paused_image_data_ = std::span<uint8_t>(TinyEmu::get().frame_buffer1(), paused_image_data_size);
   file.read((char*)paused_image_data_.data(), paused_image_data_size);
   file.close();
   memset(&paused_image_, 0, sizeof(paused_image_));
@@ -215,7 +215,7 @@ void Menu::update_fps_label(float fps) {
 }
 
 void Menu::set_mute(bool muted) {
-  BoxEmu::get().mute(muted);
+  TinyEmu::get().mute(muted);
   if (muted) {
     lv_obj_add_state(ui_volume_mute_btn, LV_STATE_CHECKED);
   } else {
@@ -226,17 +226,17 @@ void Menu::set_mute(bool muted) {
 void Menu::set_audio_level(int new_audio_level) {
   new_audio_level = std::clamp(new_audio_level, 0, 100);
   lv_bar_set_value(ui_Bar2, new_audio_level, LV_ANIM_ON);
-  BoxEmu::get().volume(new_audio_level);
+  TinyEmu::get().volume(new_audio_level);
 }
 
 void Menu::set_brightness(int new_brightness) {
   new_brightness = std::clamp(new_brightness, 10, 100);
   lv_bar_set_value(ui_brightness_bar, new_brightness, LV_ANIM_ON);
-  BoxEmu::get().brightness((float)new_brightness);
+  TinyEmu::get().brightness((float)new_brightness);
 }
 
 void Menu::set_video_setting(VideoSetting setting) {
-  BoxEmu::get().video_setting(setting);
+  TinyEmu::get().video_setting(setting);
   lv_dropdown_set_selected(ui_Dropdown2, (int)setting);
 }
 
@@ -304,12 +304,12 @@ void Menu::on_pressed(lv_event_t *e) {
   // volume controls
   bool is_volume_up_button = (target == ui_volume_inc_btn);
   if (is_volume_up_button) {
-    set_audio_level(BoxEmu::get().volume() + 10);
+    set_audio_level(TinyEmu::get().volume() + 10);
     return;
   }
   bool is_volume_down_button = (target == ui_volume_dec_btn);
   if (is_volume_down_button) {
-    set_audio_level(BoxEmu::get().volume() - 10);
+    set_audio_level(TinyEmu::get().volume() - 10);
     return;
   }
   bool is_mute_button = (target == ui_volume_mute_btn);
@@ -320,12 +320,12 @@ void Menu::on_pressed(lv_event_t *e) {
   // brightness controls
   bool is_brightness_up_button = (target == ui_brightness_inc_btn);
   if (is_brightness_up_button) {
-    set_brightness(BoxEmu::get().brightness() + 10);
+    set_brightness(TinyEmu::get().brightness() + 10);
     return;
   }
   bool is_brightness_down_button = (target == ui_brightness_dec_btn);
   if (is_brightness_down_button) {
-    set_brightness(BoxEmu::get().brightness() - 10);
+    set_brightness(TinyEmu::get().brightness() - 10);
     return;
   }
 }
@@ -333,7 +333,7 @@ void Menu::on_pressed(lv_event_t *e) {
 void Menu::on_volume(const std::vector<uint8_t>& data) {
   std::lock_guard<std::recursive_mutex> lk(mutex_);
   // the volume was changed, update our display of the volume
-  lv_bar_set_value(ui_Bar2, BoxEmu::get().volume(), LV_ANIM_ON);
+  lv_bar_set_value(ui_Bar2, TinyEmu::get().volume(), LV_ANIM_ON);
 }
 
 void Menu::on_battery(const std::vector<uint8_t>& data) {

@@ -10,7 +10,7 @@
 #include "display.hpp"
 #include "logger.hpp"
 
-#include "box-emu.hpp"
+#include "tiny-emu.hpp"
 #include "rom_info.hpp"
 #include "menu.hpp"
 
@@ -23,7 +23,7 @@
 /// - romdata
 class Cart {
 public:
-  using Pixel = BoxEmu::Pixel;
+  using Pixel = TinyEmu::Pixel;
   /// Configuration for the Cart class
   struct Config {
     RomInfo info; ///< rom info
@@ -41,14 +41,14 @@ public:
       logger_({.tag = "Cart", .level = config.verbosity}) {
     logger_.info("ctor");
     // clear the screen
-    BoxEmu::get().clear_screen();
+    TinyEmu::get().clear_screen();
 
-    auto &box = BoxEmu::get();
+    auto &box = TinyEmu::get();
 
     // copy the romdata
     if (config.copy_romdata) {
       logger_.info("Copying romdata...");
-      rom_size_bytes_ = BoxEmu::get().copy_file_to_romdata(get_rom_filename());
+      rom_size_bytes_ = TinyEmu::get().copy_file_to_romdata(get_rom_filename());
       romdata_ = box.romdata();
     } else {
       logger_.info("Not copying romdata...");
@@ -167,11 +167,11 @@ public:
   virtual bool run() {
     running_ = true;
     // handle touchpad so we can know if the user presses the menu
-    auto touch = BoxEmu::Bsp::get().touchpad_data();
+    auto touch = TinyEmu::Bsp::get().touchpad_data();
     bool btn_state = touch.btn_state;
     // also get the gamepad input state so we can know if the user presses the
     // start/select buttons together to bring up the menu
-    auto state = BoxEmu::get().gamepad_state();
+    auto state = TinyEmu::get().gamepad_state();
     // if the user presses the menu button or the start/select buttons, then
     // pause the game and show the menu
     bool show_menu = btn_state || (state.start && state.select);
@@ -189,7 +189,7 @@ public:
         std::this_thread::sleep_for(100ms);
       }
       // make sure to clear the screen before we resume the game
-      BoxEmu::get().clear_screen();
+      TinyEmu::get().clear_screen();
       // only run the post_menu if we are still running
       if (running_)
         post_menu();
@@ -198,9 +198,9 @@ public:
   }
 
 protected:
-  static constexpr size_t SCREEN_WIDTH = BoxEmu::lcd_width();
-  static constexpr size_t SCREEN_HEIGHT = BoxEmu::lcd_height();
-  static constexpr std::string FS_PREFIX = BoxEmu::mount_point;
+  static constexpr size_t SCREEN_WIDTH = TinyEmu::lcd_width();
+  static constexpr size_t SCREEN_HEIGHT = TinyEmu::lcd_height();
+  static constexpr std::string FS_PREFIX = TinyEmu::mount_point;
   static constexpr std::string SAVE_DIR = "/saves/";
 
   virtual void on_menu_action(Menu::Action action) {
@@ -265,7 +265,7 @@ protected:
 
   virtual void handle_video_setting() {
     logger_.info("Base handling video setting...");
-    switch (BoxEmu::get().video_setting()) {
+    switch (TinyEmu::get().video_setting()) {
     case VideoSetting::ORIGINAL:
       set_original_video_setting();
       break;

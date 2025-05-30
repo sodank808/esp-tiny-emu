@@ -2,7 +2,7 @@
 #include <stdlib.h>
 #include <vector>
 
-#include "box-emu.hpp"
+#include "tiny-emu.hpp"
 
 using namespace std::chrono_literals;
 
@@ -20,7 +20,7 @@ extern "C" void app_main(void) {
   logger.info("Starting example!");
 
   //! [esp box example]
-  BoxEmu &emu = BoxEmu::get();
+  TinyEmu &emu = TinyEmu::get();
   emu.set_log_level(espp::Logger::Verbosity::INFO);
   espp::EspBox &box = espp::EspBox::get();
   logger.info("Running on {}", box.box_type());

@@ -18,7 +18,7 @@ extern "C" {
 
 #include <string>
 
-#include "box-emu.hpp"
+#include "tiny-emu.hpp"
 #include "statistics.hpp"
 
 static constexpr int AUDIO_BUFFER_LENGTH = std::max(GWENESIS_AUDIO_BUFFER_LENGTH_NTSC, GWENESIS_AUDIO_BUFFER_LENGTH_PAL);
@@ -159,11 +159,11 @@ static void init(uint8_t *romdata, size_t rom_data_size) {
   frame_counter = 0;
   muteFrameCount = 0;
 
-  BoxEmu::get().audio_sample_rate(REG1_PAL ? GWENESIS_AUDIO_FREQ_PAL/2 : GWENESIS_AUDIO_FREQ_NTSC/2);
+  TinyEmu::get().audio_sample_rate(REG1_PAL ? GWENESIS_AUDIO_FREQ_PAL/2 : GWENESIS_AUDIO_FREQ_NTSC/2);
 
   frame_buffer = frame_buffer_index
-    ? BoxEmu::get().frame_buffer1()
-    : BoxEmu::get().frame_buffer0();
+    ? TinyEmu::get().frame_buffer1()
+    : TinyEmu::get().frame_buffer0();
   gwenesis_vdp_set_buffer(frame_buffer);
 
   fmt::print("Num bytes allocated: {}\n", shared_num_bytes_allocated());
@@ -172,7 +172,7 @@ static void init(uint8_t *romdata, size_t rom_data_size) {
 }
 
 void init_genesis(uint8_t *romdata, size_t rom_data_size) {
-  BoxEmu::get().native_size(GENESIS_SCREEN_WIDTH, GENESIS_VISIBLE_HEIGHT, GENESIS_SCREEN_WIDTH);
+  TinyEmu::get().native_size(GENESIS_SCREEN_WIDTH, GENESIS_VISIBLE_HEIGHT, GENESIS_SCREEN_WIDTH);
   init(romdata, rom_data_size);
 }
 
@@ -180,9 +180,9 @@ void IRAM_ATTR run_genesis_rom() {
   auto start = esp_timer_get_time();
   // handle input here (see system.h and use input.pad and input.system)
   static GamepadState previous_state = {};
-  auto state = BoxEmu::get().gamepad_state();
+  auto state = TinyEmu::get().gamepad_state();
 
-  bool sound_enabled = !BoxEmu::get().is_muted();
+  bool sound_enabled = !TinyEmu::get().is_muted();
 
   frameskip = sound_enabled ? full_frameskip : muted_frameskip;
 
@@ -306,14 +306,14 @@ void IRAM_ATTR run_genesis_rom() {
     // copy the palette
     memcpy(palette, CRAM565, PALETTE_SIZE * sizeof(uint16_t));
     // set the palette
-    BoxEmu::get().palette(palette, PALETTE_SIZE);
+    TinyEmu::get().palette(palette, PALETTE_SIZE);
     // push the frame buffer to the display task
-    BoxEmu::get().push_frame(frame_buffer);
+    TinyEmu::get().push_frame(frame_buffer);
     // ping pong the frame buffer
     frame_buffer_index = !frame_buffer_index;
     frame_buffer = frame_buffer_index
-      ? BoxEmu::get().frame_buffer1()
-      : BoxEmu::get().frame_buffer0();
+      ? TinyEmu::get().frame_buffer1()
+      : TinyEmu::get().frame_buffer0();
     gwenesis_vdp_set_buffer(frame_buffer);
   }
 
@@ -333,7 +333,7 @@ void IRAM_ATTR run_genesis_rom() {
       }
       gwenesis_sn76489_buffer[i] = sample;
     }
-    BoxEmu::get().play_audio((uint8_t*)gwenesis_ym2612_buffer, audio_len * sizeof(int16_t));
+    TinyEmu::get().play_audio((uint8_t*)gwenesis_ym2612_buffer, audio_len * sizeof(int16_t));
   }
 
   // manage statistics
@@ -369,8 +369,8 @@ std::span<uint8_t> get_genesis_video_buffer() {
   static constexpr int width = GENESIS_SCREEN_WIDTH;
 
   auto *span_buffer = !frame_buffer_index
-    ? BoxEmu::get().frame_buffer1()
-    : BoxEmu::get().frame_buffer0();
+    ? TinyEmu::get().frame_buffer1()
+    : TinyEmu::get().frame_buffer0();
 
   // make a span from the _other_ frame buffer so we can reuse memory
   // this is a bit of a hack, but it works
@@ -388,7 +388,7 @@ std::span<uint8_t> get_genesis_video_buffer() {
 }
 
 void deinit_genesis() {
-  BoxEmu::get().audio_sample_rate(48000);
+  TinyEmu::get().audio_sample_rate(48000);
   shared_mem_clear();
   free(M68K_RAM);
   free(lfo_pm_table);

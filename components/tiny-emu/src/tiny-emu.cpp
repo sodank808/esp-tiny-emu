@@ -1,42 +1,42 @@
-#include "box-emu.hpp"
+#include "tiny-emu.hpp"
 
-BoxEmu::BoxEmu() : espp::BaseComponent("BoxEmu") {
+TinyEmu::TinyEmu() : espp::BaseComponent("TinyEmu") {
   detect();
 }
 
-BoxEmu::Version BoxEmu::version() const {
+TinyEmu::Version TinyEmu::version() const {
   return version_;
 }
 
-void BoxEmu::detect() {
+void TinyEmu::detect() {
   bool version0_found = external_i2c_.probe_device(version0::input_address);
   bool version1_found = external_i2c_.probe_device(version1::input_address);
   if (version1_found) {
     // Version 1
-    version_ = BoxEmu::Version::V1;
+    version_ = TinyEmu::Version::V1;
   } else if (version0_found) {
     // Version 0
-    version_ = BoxEmu::Version::V0;
+    version_ = TinyEmu::Version::V0;
   } else {
     logger_.warn("No box-emu hardware detected");
     logger_.warn("\tProbed for MCP23x17 (version0) at 0x{:02x}", version0::input_address);
     logger_.warn("\tProbed for AW9523 (version1) at 0x{:02x}", version1::input_address);
     // No box detected
-    version_ = BoxEmu::Version::UNKNOWN;
+    version_ = TinyEmu::Version::UNKNOWN;
     return;
   }
   logger_.info("version {}", version_);
 }
 
-espp::I2c &BoxEmu::internal_i2c() {
+espp::I2c &TinyEmu::internal_i2c() {
   return Bsp::get().internal_i2c();
 }
 
-espp::I2c &BoxEmu::external_i2c() {
+espp::I2c &TinyEmu::external_i2c() {
   return external_i2c_;
 }
 
-bool BoxEmu::initialize_box() {
+bool TinyEmu::initialize_box() {
   logger_.info("Initializing underlying BSP");
   auto &box = Bsp::get();
   // initialize the sound
@@ -98,7 +98,7 @@ bool BoxEmu::initialize_box() {
 // uSD Card
 /////////////////////////////////////////////////////////////////////////////
 
-bool BoxEmu::initialize_sdcard() {
+bool TinyEmu::initialize_sdcard() {
   if (sdcard_) {
     logger_.error("SD card already initialized!");
     return false;
@@ -174,7 +174,7 @@ bool BoxEmu::initialize_sdcard() {
   return true;
 }
 
-sdmmc_card_t *BoxEmu::sdcard() const {
+sdmmc_card_t *TinyEmu::sdcard() const {
   return sdcard_;
 }
 
@@ -185,11 +185,11 @@ sdmmc_card_t *BoxEmu::sdcard() const {
 static constexpr size_t memory_size = 4*1024*1024;
 
 extern "C" uint8_t *osd_getromdata() {
-  auto &emu = BoxEmu::get();
+  auto &emu = TinyEmu::get();
   return emu.romdata();
 }
 
-bool BoxEmu::initialize_memory() {
+bool TinyEmu::initialize_memory() {
   if (romdata_) {
     logger_.error("ROM already initialized!");
     return false;
@@ -206,7 +206,7 @@ bool BoxEmu::initialize_memory() {
   return true;
 }
 
-void BoxEmu::deinitialize_memory() {
+void TinyEmu::deinitialize_memory() {
   if (romdata_) {
     logger_.info("Deinitializing memory (romdata)");
     free(romdata_);
@@ -214,7 +214,7 @@ void BoxEmu::deinitialize_memory() {
   }
 }
 
-size_t BoxEmu::copy_file_to_romdata(const std::string& filename) {
+size_t TinyEmu::copy_file_to_romdata(const std::string& filename) {
   // load the file data and iteratively copy it over
   std::ifstream romfile(filename, std::ios::binary | std::ios::ate); //open file at end
   if (!romfile.is_open()) {
@@ -229,7 +229,7 @@ size_t BoxEmu::copy_file_to_romdata(const std::string& filename) {
   return filesize;
 }
 
-uint8_t *BoxEmu::romdata() const {
+uint8_t *TinyEmu::romdata() const {
   return romdata_;
 }
 
@@ -237,9 +237,9 @@ uint8_t *BoxEmu::romdata() const {
 // Gamepad
 /////////////////////////////////////////////////////////////////////////////
 
-bool BoxEmu::initialize_gamepad() {
+bool TinyEmu::initialize_gamepad() {
   logger_.info("Initializing gamepad");
-  if (version_ == BoxEmu::Version::V0) {
+  if (version_ == TinyEmu::Version::V0) {
     auto raw_input = new version0::InputType(
                                              std::make_shared<version0::InputDriver>(version0::InputDriver::Config{
                                                  .device_address = version0::input_address,
@@ -253,7 +253,7 @@ bool BoxEmu::initialize_gamepad() {
                                                })
                                              );
     input_.reset(raw_input);
-  } else if (version_ == BoxEmu::Version::V1) {
+  } else if (version_ == TinyEmu::Version::V1) {
     auto raw_input = new version1::InputType(
                                              std::make_shared<version1::InputDriver>(version1::InputDriver::Config{
                                                  .device_address = version1::input_address,
@@ -273,7 +273,7 @@ bool BoxEmu::initialize_gamepad() {
 
   // now initialize the keypad driver
   keypad_ = std::make_shared<espp::KeypadInput>(espp::KeypadInput::Config{
-      .read = std::bind(&BoxEmu::keypad_read, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6),
+      .read = std::bind(&TinyEmu::keypad_read, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6),
       .log_level = espp::Logger::Verbosity::WARN
     });
 
@@ -289,12 +289,12 @@ bool BoxEmu::initialize_gamepad() {
   return true;
 }
 
-GamepadState BoxEmu::gamepad_state() {
+GamepadState TinyEmu::gamepad_state() {
   std::lock_guard<std::recursive_mutex> lock(gamepad_state_mutex_);
   return gamepad_state_;
 }
 
-bool BoxEmu::update_gamepad_state() {
+bool TinyEmu::update_gamepad_state() {
   if (!input_) {
     return false;
   }
@@ -321,7 +321,7 @@ bool BoxEmu::update_gamepad_state() {
   return changed;
 }
 
-void BoxEmu::keypad_read(bool *up, bool *down, bool *left, bool *right, bool *enter, bool *escape) {
+void TinyEmu::keypad_read(bool *up, bool *down, bool *left, bool *right, bool *enter, bool *escape) {
   std::lock_guard<std::recursive_mutex> lock(gamepad_state_mutex_);
   *up = gamepad_state_.up;
   *down = gamepad_state_.down;
@@ -332,7 +332,7 @@ void BoxEmu::keypad_read(bool *up, bool *down, bool *left, bool *right, bool *en
   *escape = gamepad_state_.b || gamepad_state_.select;
 }
 
-std::shared_ptr<espp::KeypadInput> BoxEmu::keypad() const {
+std::shared_ptr<espp::KeypadInput> TinyEmu::keypad() const {
   return keypad_;
 }
 
@@ -340,8 +340,8 @@ std::shared_ptr<espp::KeypadInput> BoxEmu::keypad() const {
 // Battery
 /////////////////////////////////////////////////////////////////////////////
 
-bool BoxEmu::initialize_battery() {
-  if (version_ == BoxEmu::Version::V0) {
+bool TinyEmu::initialize_battery() {
+  if (version_ == TinyEmu::Version::V0) {
     logger_.warn("Battery not supported on version 0");
     return false;
   }
@@ -445,7 +445,7 @@ bool BoxEmu::initialize_battery() {
   return true;
 }
 
-std::shared_ptr<espp::Max1704x> BoxEmu::battery() const {
+std::shared_ptr<espp::Max1704x> TinyEmu::battery() const {
   return battery_;
 }
 
@@ -453,7 +453,7 @@ std::shared_ptr<espp::Max1704x> BoxEmu::battery() const {
 // Video
 /////////////////////////////////////////////////////////////////////////////
 
-bool BoxEmu::initialize_video() {
+bool TinyEmu::initialize_video() {
   if (video_task_) {
     logger_.error("Video task already initialized!");
     return false;
@@ -464,7 +464,7 @@ bool BoxEmu::initialize_video() {
   video_queue_ = xQueueCreate(1, sizeof(uint16_t*));
   using namespace std::placeholders;
   video_task_ = espp::Task::make_unique({
-      .callback = std::bind(&BoxEmu::video_task_callback, this, _1, _2, _3),
+      .callback = std::bind(&TinyEmu::video_task_callback, this, _1, _2, _3),
       .task_config = {
         .name = "video task",
         .stack_size_bytes = 4*1024,
@@ -477,28 +477,28 @@ bool BoxEmu::initialize_video() {
   return true;
 }
 
-void BoxEmu::clear_screen() {
+void TinyEmu::clear_screen() {
   static int buffer = 0;
   xQueueSend(video_queue_, &buffer, 10);
 }
 
-void BoxEmu::display_size(size_t width, size_t height) {
+void TinyEmu::display_size(size_t width, size_t height) {
   display_width_ = width;
   display_height_ = height;
 }
 
-void BoxEmu::native_size(size_t width, size_t height, int pitch) {
+void TinyEmu::native_size(size_t width, size_t height, int pitch) {
   native_width_ = width;
   native_height_ = height;
   native_pitch_ = pitch == -1 ? width : pitch;
 }
 
-void BoxEmu::palette(const uint16_t *palette, size_t size) {
+void TinyEmu::palette(const uint16_t *palette, size_t size) {
   palette_ = palette;
   palette_size_ = size;
 }
 
-void IRAM_ATTR BoxEmu::push_frame(const void* frame) {
+void IRAM_ATTR TinyEmu::push_frame(const void* frame) {
   if (video_queue_ == nullptr) {
     logger_.error("video queue is null, make sure to call initialize_video() first!");
     return;
@@ -506,11 +506,11 @@ void IRAM_ATTR BoxEmu::push_frame(const void* frame) {
   xQueueSend(video_queue_, &frame, 0);
 }
 
-VideoSetting BoxEmu::video_setting() const {
+VideoSetting TinyEmu::video_setting() const {
   return video_setting_;
 }
 
-void BoxEmu::video_setting(const VideoSetting setting) {
+void TinyEmu::video_setting(const VideoSetting setting) {
   video_setting_ = setting;
 }
 
@@ -518,7 +518,7 @@ void BoxEmu::video_setting(const VideoSetting setting) {
 // Haptic Motor
 /////////////////////////////////////////////////////////////////////////////
 
-bool BoxEmu::initialize_haptics() {
+bool TinyEmu::initialize_haptics() {
   if (haptic_motor_) {
     logger_.error("Haptics already initialized!");
     return false;
@@ -540,11 +540,11 @@ bool BoxEmu::initialize_haptics() {
   return true;
 }
 
-std::shared_ptr<espp::Drv2605> BoxEmu::haptics() const {
+std::shared_ptr<espp::Drv2605> TinyEmu::haptics() const {
   return haptic_motor_;
 }
 
-void BoxEmu::play_haptic_effect() {
+void TinyEmu::play_haptic_effect() {
   if (haptic_motor_ == nullptr) {
     logger_.error("Haptic motor not initialized!");
     return;
@@ -556,7 +556,7 @@ void BoxEmu::play_haptic_effect() {
     }
 }
 
-void BoxEmu::play_haptic_effect(int effect) {
+void TinyEmu::play_haptic_effect(int effect) {
   if (haptic_motor_ == nullptr) {
     logger_.error("Haptic motor not initialized!");
     return;
@@ -565,7 +565,7 @@ void BoxEmu::play_haptic_effect(int effect) {
   play_haptic_effect();
 }
 
-void BoxEmu::set_haptic_effect(int effect) {
+void TinyEmu::set_haptic_effect(int effect) {
   if (haptic_motor_ == nullptr) {
     logger_.error("Haptic motor not initialized!");
     return;
@@ -621,17 +621,17 @@ static tusb_desc_device_t descriptor_config = {
 
 static char const *string_desc_arr[] = {
     (const char[]) { 0x09, 0x04 },  // 0: is supported language is English (0x0409)
-    "Finger563",                      // 1: Manufacturer
-    "ESP-Box-Emu",                  // 2: Product
+    "sodank808",                      // 1: Manufacturer
+    "ESP-Tiny-Emu",                  // 2: Product
     "123456",                       // 3: Serials
-    "Box-Emu uSD Card",                     // 4. MSC
+    "Tiny-Emu uSD Card",                     // 4. MSC
 };
 
-bool BoxEmu::is_usb_enabled() const {
+bool TinyEmu::is_usb_enabled() const {
   return usb_enabled_;
 }
 
-bool BoxEmu::initialize_usb() {
+bool TinyEmu::initialize_usb() {
   if (usb_enabled_) {
     logger_.error("USB MSC already initialized!");
     return false;
@@ -681,7 +681,7 @@ bool BoxEmu::initialize_usb() {
   return true;
 }
 
-bool BoxEmu::deinitialize_usb() {
+bool TinyEmu::deinitialize_usb() {
   if (!usb_enabled_) {
     logger_.warn("USB MSC not initialized");
     return false;
@@ -706,27 +706,27 @@ bool BoxEmu::deinitialize_usb() {
 // Static Video Task:
 /////////////////////////////////////////////////////////////////////////////
 
-bool BoxEmu::has_palette() const {
+bool TinyEmu::has_palette() const {
   return palette_ != nullptr;
 }
 
-bool BoxEmu::is_native() const {
+bool TinyEmu::is_native() const {
   return native_width_ == display_width_ && native_height_ == display_height_;
 }
 
-int BoxEmu::x_offset() const {
+int TinyEmu::x_offset() const {
   return (Bsp::lcd_width()-display_width_)/2;
 }
 
-int BoxEmu::y_offset() const {
+int TinyEmu::y_offset() const {
   return (Bsp::lcd_height()-display_height_)/2;
 }
 
-const uint16_t* BoxEmu::palette() const {
+const uint16_t* TinyEmu::palette() const {
   return palette_;
 }
 
-bool BoxEmu::video_task_callback(std::mutex &m, std::condition_variable& cv, bool &task_notified) {
+bool TinyEmu::video_task_callback(std::mutex &m, std::condition_variable& cv, bool &task_notified) {
   const void *_frame_ptr;
   if (xQueueReceive(video_queue_, &_frame_ptr, portMAX_DELAY) != pdTRUE) {
     return false;

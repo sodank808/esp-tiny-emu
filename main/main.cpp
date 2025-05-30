@@ -10,7 +10,7 @@
 #include "task_monitor.hpp"
 #include "timer.hpp"
 
-#include "box-emu.hpp"
+#include "tiny-emu.hpp"
 #include "carts.hpp"
 #include "gui.hpp"
 #include "heap_utils.hpp"
@@ -20,12 +20,12 @@
 using namespace std::chrono_literals;
 
 extern "C" void app_main(void) {
-  espp::Logger logger({.tag = "esp-box-emu", .level = espp::Logger::Verbosity::INFO});
+  espp::Logger logger({.tag = "esp-tiny-emu", .level = espp::Logger::Verbosity::INFO});
   logger.info("Bootup");
 
   // initialize the hardware abstraction layer
-  BoxEmu &emu = BoxEmu::get();
-  logger.info("Box Emu version: {}", emu.version());
+  TinyEmu &emu = TinyEmu::get();
+  logger.info("Tiny Emu version: {}", emu.version());
 
   // initialize
   if (!emu.initialize_box()) {
@@ -65,7 +65,7 @@ extern "C" void app_main(void) {
 
   logger.info("initializing gui...");
 
-  auto display = BoxEmu::Bsp::get().display();
+  auto display = TinyEmu::Bsp::get().display();
 
   // initialize the gui
   Gui gui({

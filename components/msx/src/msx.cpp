@@ -4,7 +4,7 @@
 
 #include <memory>
 
-#include "box-emu.hpp"
+#include "tiny-emu.hpp"
 #include "statistics.hpp"
 
 static const size_t MSX_SCREEN_WIDTH = 256;
@@ -93,7 +93,7 @@ static const char *BiosFiles[] = {
 };
 
 bool wait_for_key(GamepadState::Button key, bool state, int timeout_ms) {
-    static auto& box = BoxEmu::get();
+    static auto& box = TinyEmu::get();
     auto buttons = box.gamepad_state();
     auto start = esp_timer_get_time();
     auto timeout = start + (timeout_ms * 1000);
@@ -114,7 +114,7 @@ int ProcessEvents(int Wait)
         KeyState[i] = 0xFF;
     JoyState = 0;
 
-    static auto& box = BoxEmu::get();
+    static auto& box = TinyEmu::get();
     auto state = box.gamepad_state();
 
     // update unlock based on x button
@@ -282,7 +282,7 @@ void SetColor(byte N, byte R, byte G, byte B)
 
 static inline void SubmitFrame(void)
 {
-    static auto& box = BoxEmu::get();
+    static auto& box = TinyEmu::get();
     box.push_frame(framebuffer);
 
     // swap buffers
@@ -374,7 +374,7 @@ unsigned int WaitKeyOrMouse(void)
 static size_t audio_buffer_offset = 0;
 unsigned int InitAudio(unsigned int Rate, unsigned int Latency)
 {
-    BoxEmu::get().audio_sample_rate(Rate);
+    TinyEmu::get().audio_sample_rate(Rate);
     return AUDIO_SAMPLE_RATE;
 }
 
@@ -389,13 +389,13 @@ unsigned int GetFreeAudio(void)
 }
 
 void PlayAllSound(int uSec) {
-    static auto &box = BoxEmu::get();
+    static auto &box = TinyEmu::get();
     unsigned int samples = 2 * uSec * AUDIO_SAMPLE_RATE / 1'000'000;
     RenderAndPlayAudio(samples);
 }
 
 unsigned int WriteAudio(sample *Data, unsigned int Length) {
-    static auto &box = BoxEmu::get();
+    static auto &box = TinyEmu::get();
     bool sound_enabled = !box.is_muted();
     if (sound_enabled) {
         if (audio_buffer_offset + Length > AUDIO_BUFFER_LENGTH) {
@@ -455,15 +455,15 @@ void init_msx(const std::string& rom_filename, uint8_t *romdata, size_t rom_data
   Buf = (HUNTEntry*)shared_malloc(sizeof(HUNTEntry) * HUNT_BUFSIZE);
   RPLData = (RPLState*)shared_malloc(sizeof(RPLState) * RPL_BUFSIZE);
 
-  void* pool_ptr = BoxEmu::get().romdata();
+  void* pool_ptr = TinyEmu::get().romdata();
   pool_create(pool_ptr, 4*1024*1024);
 
   // reset unlock
   unlock = false;
 
   // now init the state
-  displayBuffer[0] = (uint16_t*)BoxEmu::get().frame_buffer0();
-  displayBuffer[1] = (uint16_t*)BoxEmu::get().frame_buffer1();
+  displayBuffer[0] = (uint16_t*)TinyEmu::get().frame_buffer0();
+  displayBuffer[1] = (uint16_t*)TinyEmu::get().frame_buffer1();
   currentBuffer = 0;
   framebuffer = displayBuffer[0];
 
@@ -472,8 +472,8 @@ void init_msx(const std::string& rom_filename, uint8_t *romdata, size_t rom_data
   currentAudioBuffer = 0;
   audio_buffer = audio_buffers[currentAudioBuffer];
 
-  BoxEmu::get().native_size(MSX_SCREEN_WIDTH, MSX_SCREEN_HEIGHT);
-  BoxEmu::get().palette(nullptr);
+  TinyEmu::get().native_size(MSX_SCREEN_WIDTH, MSX_SCREEN_HEIGHT);
+  TinyEmu::get().palette(nullptr);
 
   reset_frame_time();
 
@@ -545,5 +545,5 @@ void deinit_msx() {
     TrashSound();
     shared_mem_clear();
     pool_destroy();
-    BoxEmu::get().audio_sample_rate(48000);
+    TinyEmu::get().audio_sample_rate(48000);
 }

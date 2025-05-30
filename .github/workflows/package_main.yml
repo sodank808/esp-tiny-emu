@@ -33,7 +33,7 @@ jobs:
     - name: Zip up firmware binaries
       run: |
         # zip the firmware bin files and flash args
-        zip -j -r firmware-binaries.zip build/esp-box-emu.bin build/bootloader/bootloader.bin build/partition_table/partition-table.bin build/flash_args build/flasher_args.json
+        zip -j -r firmware-binaries.zip build/esp-tiny-emu.bin build/bootloader/bootloader.bin build/partition_table/partition-table.bin build/flash_args build/flasher_args.json
 
     - name: Upload Build Outputs
       uses: actions/upload-artifact@v4
@@ -43,7 +43,7 @@ jobs:
         path: |
           build/bootloader/bootloader.bin
           build/partition_table/partition-table.bin
-          build/esp-box-emu.bin
+          build/esp-tiny-emu.bin
           build/flasher_args.json
           build/flash_args
 
@@ -64,4 +64,4 @@ jobs:
       - uses: esp-cpp/esp-packaged-programmer-action@v1.0.5
         with:
           zipfile-id: ${{ needs.build.outputs.zipfile-id }}
-          programmer-name: 'esp-box-emu_programmer'
+          programmer-name: 'esp-tiny-emu_programmer'

@@ -6,7 +6,7 @@ extern "C" {
 
 #include <string>
 
-#include "box-emu.hpp"
+#include "tiny-emu.hpp"
 #include "statistics.hpp"
 
 static constexpr size_t SMS_SCREEN_WIDTH = 256;
@@ -79,7 +79,7 @@ static void init(uint8_t *romdata, size_t rom_data_size) {
   bitmap.width = SMS_SCREEN_WIDTH;
   bitmap.height = SMS_VISIBLE_HEIGHT;
   bitmap.pitch = bitmap.width;
-  bitmap.data = BoxEmu::get().frame_buffer0();
+  bitmap.data = TinyEmu::get().frame_buffer0();
 
   cart.sram = sms_sram;
   sms->wram = sms_ram;
@@ -88,7 +88,7 @@ static void init(uint8_t *romdata, size_t rom_data_size) {
 
   set_option_defaults();
 
-  option.sndrate = BoxEmu::get().audio_sample_rate();
+  option.sndrate = TinyEmu::get().audio_sample_rate();
   option.overscan = 0;
   option.extra_gg = 0;
 
@@ -106,7 +106,7 @@ static void init(uint8_t *romdata, size_t rom_data_size) {
 
 void init_sms(uint8_t *romdata, size_t rom_data_size) {
   is_gg = false;
-  BoxEmu::get().native_size(SMS_SCREEN_WIDTH, SMS_VISIBLE_HEIGHT, SMS_SCREEN_WIDTH);
+  TinyEmu::get().native_size(SMS_SCREEN_WIDTH, SMS_VISIBLE_HEIGHT, SMS_SCREEN_WIDTH);
   init_memory();
   load_rom_data(romdata, rom_data_size);
   sms->console = CONSOLE_SMS;
@@ -120,7 +120,7 @@ void init_sms(uint8_t *romdata, size_t rom_data_size) {
 
 void init_gg(uint8_t *romdata, size_t rom_data_size) {
   is_gg = true;
-  BoxEmu::get().native_size(GG_SCREEN_WIDTH, GG_VISIBLE_HEIGHT, SMS_SCREEN_WIDTH);
+  TinyEmu::get().native_size(GG_SCREEN_WIDTH, GG_VISIBLE_HEIGHT, SMS_SCREEN_WIDTH);
   init_memory();
   load_rom_data(romdata, rom_data_size);
   sms->console = CONSOLE_GG;
@@ -135,7 +135,7 @@ void init_gg(uint8_t *romdata, size_t rom_data_size) {
 void run_sms_rom() {
   auto start = esp_timer_get_time();
   // handle input here (see system.h and use input.pad and input.system)
-  auto state = BoxEmu::get().gamepad_state();
+  auto state = TinyEmu::get().gamepad_state();
 
   // pad[0] is player 0
   input.pad[0] = 0;
@@ -167,15 +167,15 @@ void run_sms_rom() {
       palette[i] = (rgb565 >> 8) | (rgb565 << 8);
     }
     // set the palette
-    BoxEmu::get().palette(palette, PALETTE_SIZE);
+    TinyEmu::get().palette(palette, PALETTE_SIZE);
 
     // render the frame
-    BoxEmu::get().push_frame((uint8_t*)bitmap.data + frame_buffer_offset);
+    TinyEmu::get().push_frame((uint8_t*)bitmap.data + frame_buffer_offset);
     // ping pong the frame buffer
     frame_buffer_index = !frame_buffer_index;
     bitmap.data = frame_buffer_index
-      ? (uint8_t*)BoxEmu::get().frame_buffer1()
-      : (uint8_t*)BoxEmu::get().frame_buffer0();
+      ? (uint8_t*)TinyEmu::get().frame_buffer1()
+      : (uint8_t*)TinyEmu::get().frame_buffer0();
   } else {
     system_frame(1);
   }
@@ -200,7 +200,7 @@ void run_sms_rom() {
   auto sms_audio_buffer_len = sms_snd->sample_count - 1;
 
   // push the audio buffer to the audio task
-  BoxEmu::get().play_audio((uint8_t*)sms_audio_buffer, sms_audio_buffer_len * 2 * 2); // 2 channels, 2 bytes per sample
+  TinyEmu::get().play_audio((uint8_t*)sms_audio_buffer, sms_audio_buffer_len * 2 * 2); // 2 channels, 2 bytes per sample
 
   // update unlock based on x button
   static bool last_x = false;
@@ -241,8 +241,8 @@ std::span<uint8_t> get_sms_video_buffer() {
   int pitch = SMS_SCREEN_WIDTH;
 
   uint8_t *span_ptr = !frame_buffer_index
-      ? (uint8_t*)BoxEmu::get().frame_buffer1()
-      : (uint8_t*)BoxEmu::get().frame_buffer0();
+      ? (uint8_t*)TinyEmu::get().frame_buffer1()
+      : (uint8_t*)TinyEmu::get().frame_buffer0();
 
   std::span<uint8_t> frame(span_ptr, width * height * 2);
 
